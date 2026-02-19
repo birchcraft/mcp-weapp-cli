@@ -50,7 +50,32 @@
 - Node.js >= 18
 - 微信开发者工具（已安装并开启服务端口）
 
-### 安装步骤
+### 使用 npx 运行（推荐）
+
+无需安装，直接使用 npx 运行：
+
+```json
+{
+  "mcpServers": {
+    "weapp-devtools": {
+      "command": "npx",
+      "args": ["-y", "@weapp-devtools/mcp"],
+      "env": {
+        "WEAPP_PORT": "9420",
+        "WEAPP_LANG": "zh"
+      }
+    }
+  }
+}
+```
+
+### 全局安装
+
+```bash
+npm install -g @weapp-devtools/mcp
+```
+
+### 从源码安装
 
 ```bash
 # 克隆仓库
@@ -77,13 +102,30 @@ npm run build
 
 ### MCP 客户端配置
 
-#### Claude Desktop
+#### Claude Desktop / Cursor
 
 编辑配置文件：
 - **Windows**: `%APPDATA%/Claude/claude_desktop_config.json`
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
-添加以下配置：
+**使用 npx（推荐）：**
+
+```json
+{
+  "mcpServers": {
+    "weapp-devtools": {
+      "command": "npx",
+      "args": ["-y", "@weapp-devtools/mcp"],
+      "env": {
+        "WEAPP_PORT": "9420",
+        "WEAPP_LANG": "zh"
+      }
+    }
+  }
+}
+```
+
+**使用本地路径：**
 
 ```json
 {
@@ -95,21 +137,6 @@ npm run build
         "WEAPP_PORT": "9420",
         "WEAPP_LANG": "zh"
       }
-    }
-  }
-}
-```
-
-#### Cursor
-
-在 Cursor 设置中的 MCP 配置：
-
-```json
-{
-  "mcpServers": {
-    "weapp-devtools": {
-      "command": "node",
-      "args": ["D:\\Projects\\WeappMCP\\dist\\index.js"]
     }
   }
 }

@@ -10,16 +10,20 @@ import { formatError } from '../utils/helpers.js';
  * 执行构建 npm 工具
  */
 async function executeBuildNpm(args: {
-  projectPath: string;
+  project?: string;
+  projectPath?: string;
   compileType?: CompileType;
 }): Promise<ToolResult> {
   try {
-    if (!args.projectPath || typeof args.projectPath !== 'string') {
+    // 兼容 project 和 projectPath 两个参数名
+    const projectPath = args.project || args.projectPath;
+    
+    if (!projectPath || typeof projectPath !== 'string') {
       return {
         content: [
           {
             type: 'text',
-            text: '错误: projectPath 是必需参数，必须提供小程序项目的绝对路径',
+            text: '错误: project 或 projectPath 是必需参数，必须提供小程序项目的绝对路径',
           },
         ],
         isError: true,
@@ -40,26 +44,30 @@ async function executeBuildNpm(args: {
     }
 
     const result = await cliClient.buildNpm(
-      args.projectPath,
+      projectPath,
       args.compileType
     );
 
     if (result.success) {
       const typeInfo = args.compileType ? ` (${args.compileType})` : '';
+      // 合并 stdout 和 stderr
+      const output = [result.stdout, result.stderr].filter(Boolean).join('\n');
       return {
         content: [
           {
             type: 'text',
-            text: `✓ npm 构建成功${typeInfo}\n\n项目路径: ${args.projectPath}${result.stdout ? `\n\n输出信息:\n${result.stdout}` : ''}`,
+            text: `✓ npm 构建成功${typeInfo}\n\n项目路径: ${projectPath}${output ? `\n\n输出信息:\n${output}` : ''}`,
           },
         ],
       };
     } else {
+      // 合并 stdout 和 stderr
+      const output = [result.stdout, result.stderr].filter(Boolean).join('\n');
       return {
         content: [
           {
             type: 'text',
-            text: `✗ npm 构建失败 (退出码: ${result.code})\n\n${result.stderr || result.stdout || '未知错误'}`,
+            text: `✗ npm 构建失败 (退出码: ${result.code})\n\n${output || '未知错误'}`,
           },
         ],
         isError: true,
@@ -154,9 +162,13 @@ export const buildTools: ToolDefinition[] = [
     inputSchema: {
       type: 'object',
       properties: {
+        project: {
+          type: 'string',
+          description: '小程序项目目录的绝对路径（与 projectPath 二选一）',
+        },
         projectPath: {
           type: 'string',
-          description: '小程序项目目录的绝对路径',
+          description: '小程序项目目录的绝对路径（与 project 二选一，推荐使用 project）',
         },
         compileType: {
           type: 'string',
@@ -164,7 +176,7 @@ export const buildTools: ToolDefinition[] = [
           description: '编译类型：miniprogram（普通小程序）或 plugin（插件）。默认为 miniprogram',
         },
       },
-      required: ['projectPath'],
+      required: [],
     },
     handler: executeBuildNpm,
   },
