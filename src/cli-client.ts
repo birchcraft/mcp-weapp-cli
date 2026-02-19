@@ -3,6 +3,7 @@
  * 负责与微信开发者工具 CLI 交互
  */
 import { spawn } from 'child_process';
+import { platform } from 'os';
 import { CLIResult, CLIExecuteOptions, CLICommand, CacheType, QRFormat, QRSize, CompileType } from './types.js';
 import { configManager } from './config.js';
 import { logger } from './utils/logger.js';
@@ -77,7 +78,7 @@ export class CLIClient {
    * 执行 CLI 命令
    */
   async execute(
-    command: string,
+    subCommand: string,
     args: string[] = [],
     options: CLIExecuteOptions = {}
   ): Promise<CLIResult> {
@@ -85,12 +86,22 @@ export class CLIClient {
 
     const { timeout = 300000, cwd, env } = options; // 默认5分钟超时
     const globalArgs = this.buildGlobalArgs();
-    const allArgs = [command, ...args, ...globalArgs];
+    const allArgs = [subCommand, ...args, ...globalArgs];
 
-    logger.debug(`执行命令: ${this.cliPath} ${allArgs.join(' ')}`);
+    const isWindows = platform() === 'win32';
+    
+    // Windows 上执行 .bat 文件需要使用 cmd /c
+    const spawnCommand = isWindows && this.cliPath.endsWith('.bat')
+      ? 'cmd'
+      : this.cliPath;
+    const spawnArgs = isWindows && this.cliPath.endsWith('.bat')
+      ? ['/c', this.cliPath, ...allArgs]
+      : allArgs;
+    
+    logger.debug(`执行命令: ${spawnCommand} ${spawnArgs.join(' ')}`);
 
     return new Promise((resolve, reject) => {
-      const child = spawn(this.cliPath, allArgs, {
+      const child = spawn(spawnCommand, spawnArgs, {
         cwd,
         env: { ...process.env, ...env },
         stdio: ['pipe', 'pipe', 'pipe'],
