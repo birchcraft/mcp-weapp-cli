@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "weapp-devtools": {
+      "command": "node",
+      "args": ["/Users/mac/code/tencent/weapp-devtools-mcp/dist/index.js"],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}
