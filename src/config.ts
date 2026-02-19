@@ -5,6 +5,7 @@ import { WeappConfig } from './types.js';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { homedir, platform } from 'os';
+import { execSync } from 'child_process';
 
 // 默认配置
 const DEFAULT_CONFIG: WeappConfig = {
@@ -17,6 +18,8 @@ const DEFAULT_CONFIG: WeappConfig = {
 const WINDOWS_COMMON_PATHS = [
   'C:\\Program Files (x86)\\Tencent\\微信web开发者工具\\cli.bat',
   'C:\\Program Files\\Tencent\\微信web开发者工具\\cli.bat',
+  'D:\\微信web开发者工具\\cli.bat',
+  'E:\\微信web开发者工具\\cli.bat',
   join(homedir(), 'AppData', 'Local', '微信开发者工具', 'cli.bat'),
 ];
 
@@ -99,6 +102,43 @@ export class ConfigManager {
   }
 
   /**
+   * 尝试从 PATH 中找到 CLI
+   */
+  private findCliInPath(): string | null {
+    try {
+      const isWindows = platform() === 'win32';
+      
+      if (isWindows) {
+        // Windows: 使用 where 命令
+        const result = execSync('cmd /c "where cli.bat"', { 
+          encoding: 'utf-8', 
+          stdio: ['pipe', 'pipe', 'ignore'] 
+        });
+        const paths = result.trim().split('\n').map(p => p.trim()).filter(p => p);
+        
+        for (const path of paths) {
+          if (existsSync(path)) {
+            return path;
+          }
+        }
+      } else {
+        // macOS/Linux: 使用 which 命令
+        const result = execSync('which cli', { 
+          encoding: 'utf-8', 
+          stdio: ['pipe', 'pipe', 'ignore'] 
+        });
+        const path = result.trim();
+        if (path && existsSync(path)) {
+          return path;
+        }
+      }
+    } catch {
+      // 忽略错误，继续尝试其他方法
+    }
+    return null;
+  }
+
+  /**
    * 自动检测 CLI 路径
    */
   async detectCliPath(): Promise<string | null> {
@@ -107,6 +147,14 @@ export class ConfigManager {
       return this.config.cliPath;
     }
 
+    // 尝试从 PATH 中查找
+    const pathCli = this.findCliInPath();
+    if (pathCli) {
+      this.config.cliPath = pathCli;
+      return pathCli;
+    }
+
+    // 尝试常见安装路径
     const isWindows = platform() === 'win32';
     const paths = isWindows ? WINDOWS_COMMON_PATHS : MACOS_COMMON_PATHS;
 
