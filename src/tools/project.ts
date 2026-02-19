@@ -174,6 +174,49 @@ async function executeQuit(): Promise<ToolResult> {
 }
 
 /**
+ * 执行重置文件监听
+ */
+async function executeResetFileutils(args: { projectPath?: string }): Promise<ToolResult> {
+  try {
+    const result = await cliClient.resetFileutils(args.projectPath);
+
+    if (result.success) {
+      const message = args.projectPath
+        ? `成功重置项目文件监听: ${args.projectPath}`
+        : '成功重置文件监听';
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `${message}\n${result.stdout || ''}`.trim(),
+          },
+        ],
+      };
+    } else {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `重置失败 (退出码: ${result.code})\n${result.stderr || result.stdout || '未知错误'}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+  } catch (error) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `执行失败: ${formatError(error)}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+/**
  * 项目管理工具定义
  */
 export const projectTools: ToolDefinition[] = [
@@ -232,6 +275,21 @@ export const projectTools: ToolDefinition[] = [
     },
     handler: executeQuit,
   },
+  {
+    name: 'weapp_reset_fileutils',
+    description: '重置微信开发者工具的文件监听。当文件监听出现异常或需要刷新文件状态时，可以使用此工具重置文件监听模块。',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectPath: {
+          type: 'string',
+          description: '项目路径（可选）。指定要重置文件监听的项目路径',
+        },
+      },
+      required: [],
+    },
+    handler: executeResetFileutils,
+  },
 ];
 
 /**
@@ -243,4 +301,5 @@ export const projectToolExecutors = {
   weapp_open_other: executeOpenOther,
   weapp_close: executeClose,
   weapp_quit: executeQuit,
+  weapp_reset_fileutils: executeResetFileutils,
 };
