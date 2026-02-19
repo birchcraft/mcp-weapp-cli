@@ -106,17 +106,33 @@ export class WeappMCPServer {
 
       const tool = allTools.find((t) => t.name === name);
       if (!tool) {
-        return this.createErrorResult(`未知工具: ${name}`);
+        return {
+          content: [{
+            type: 'text' as const,
+            text: JSON.stringify({ success: false, error: `未知工具: ${name}` }, null, 2)
+          }],
+          isError: true
+        };
       }
 
       try {
         const result = await tool.handler(args || {});
-        return result;
+        return {
+          content: result.content,
+          isError: result.isError
+        };
       } catch (error) {
         logger.error(`工具执行失败: ${name}`, error);
-        return this.createErrorResult(
-          `执行失败: ${error instanceof Error ? error.message : String(error)}`
-        );
+        return {
+          content: [{
+            type: 'text' as const,
+            text: JSON.stringify({ 
+              success: false, 
+              error: `执行失败: ${error instanceof Error ? error.message : String(error)}` 
+            }, null, 2)
+          }],
+          isError: true
+        };
       }
     });
 
