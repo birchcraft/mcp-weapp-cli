@@ -15,11 +15,13 @@ async function executeCloudEnvList(args: { project: string }): Promise<ToolResul
     const result = await cliClient.cloudEnvList(args.project);
 
     if (result.success) {
+      // 合并 stdout 和 stderr，因为 Windows 上部分输出可能在 stderr
+      const output = [result.stdout, result.stderr].filter(Boolean).join('\n');
       return {
         content: [
           {
             type: 'text',
-            text: `获取云环境列表成功\n${result.stdout || ''}`.trim(),
+            text: `获取云环境列表成功\n${output || ''}`.trim(),
           },
         ],
       };
@@ -55,11 +57,13 @@ async function executeCloudFunctionsList(args: { project: string; env: string })
     const result = await cliClient.cloudFunctionsList(args.project, args.env);
 
     if (result.success) {
+      // 合并 stdout 和 stderr，因为 Windows 上部分输出可能在 stderr
+      const output = [result.stdout, result.stderr].filter(Boolean).join('\n');
       return {
         content: [
           {
             type: 'text',
-            text: `获取云函数列表成功\n环境: ${args.env}\n${result.stdout || ''}`.trim(),
+            text: `获取云函数列表成功\n环境: ${args.env}\n${output || ''}`.trim(),
           },
         ],
       };
@@ -173,11 +177,14 @@ async function executeCloudFunctionsDeploy(args: {
         details.push('远程安装 npm 依赖: 是');
       }
 
+      // 合并 stdout 和 stderr，因为 Windows 上部分输出可能在 stderr
+      const output = [result.stdout, result.stderr].filter(Boolean).join('\n');
+
       return {
         content: [
           {
             type: 'text',
-            text: `部署云函数成功\n环境: ${args.env}\n${details.join('\n')}\n${result.stdout || ''}`.trim(),
+            text: `部署云函数成功\n环境: ${args.env}\n${details.join('\n')}\n${output || ''}`.trim(),
           },
         ],
       };

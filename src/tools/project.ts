@@ -18,11 +18,13 @@ async function executeOpen(args: { projectPath?: string }): Promise<ToolResult> 
       const message = args.projectPath
         ? `成功打开项目: ${args.projectPath}`
         : '成功打开微信开发者工具';
+      // 合并 stdout 和 stderr
+      const output = [result.stdout, result.stderr].filter(Boolean).join('\n');
       return {
         content: [
           {
             type: 'text',
-            text: `${message}\n${result.stdout || ''}`.trim(),
+            text: `${message}\n${output || ''}`.trim(),
           },
         ],
       };
@@ -101,11 +103,13 @@ async function executeClose(args: { projectPath?: string }): Promise<ToolResult>
       const message = args.projectPath
         ? `成功关闭项目: ${args.projectPath}`
         : '成功关闭当前项目';
+      // 合并 stdout 和 stderr
+      const output = [result.stdout, result.stderr].filter(Boolean).join('\n');
       return {
         content: [
           {
             type: 'text',
-            text: `${message}\n${result.stdout || ''}`.trim(),
+            text: `${message}\n${output || ''}`.trim(),
           },
         ],
       };
@@ -184,11 +188,13 @@ async function executeResetFileutils(args: { projectPath?: string }): Promise<To
       const message = args.projectPath
         ? `成功重置项目文件监听: ${args.projectPath}`
         : '成功重置文件监听';
+      // 合并 stdout 和 stderr
+      const output = [result.stdout, result.stderr].filter(Boolean).join('\n');
       return {
         content: [
           {
             type: 'text',
-            text: `${message}\n${result.stdout || ''}`.trim(),
+            text: `${message}\n${output || ''}`.trim(),
           },
         ],
       };

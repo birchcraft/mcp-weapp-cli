@@ -39,8 +39,10 @@ async function executePreview(args: {
     if (result.success) {
       const outputLines: string[] = ['✅ 预览二维码生成成功！'];
 
-      if (result.stdout) {
-        outputLines.push('', '📝 输出信息:', result.stdout);
+      // 合并 stdout 和 stderr，因为 Windows 上部分输出可能在 stderr
+      const output = [result.stdout, result.stderr].filter(Boolean).join('\n');
+      if (output) {
+        outputLines.push('', '📝 输出信息:', output);
       }
 
       if (args.qrOutput) {

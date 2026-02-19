@@ -88,24 +88,15 @@ export class CLIClient {
     const globalArgs = this.buildGlobalArgs();
     const allArgs = [subCommand, ...args, ...globalArgs];
 
-    const isWindows = platform() === 'win32';
-    
-    // Windows 上执行 .bat 文件需要使用 cmd /c
-    const spawnCommand = isWindows && this.cliPath.endsWith('.bat')
-      ? 'cmd'
-      : this.cliPath;
-    const spawnArgs = isWindows && this.cliPath.endsWith('.bat')
-      ? ['/c', this.cliPath, ...allArgs]
-      : allArgs;
-    
-    logger.debug(`执行命令: ${spawnCommand} ${spawnArgs.join(' ')}`);
+    logger.debug(`执行命令: ${this.cliPath} ${allArgs.join(' ')}`);
 
     return new Promise((resolve, reject) => {
-      const child = spawn(spawnCommand, spawnArgs, {
+      const child = spawn(this.cliPath, allArgs, {
         cwd,
         env: { ...process.env, ...env },
         stdio: ['pipe', 'pipe', 'pipe'],
         windowsHide: true,
+        shell: true, // 使用 shell 执行，解决 Windows 上 .bat 文件的执行问题
       });
 
       let stdout = '';
