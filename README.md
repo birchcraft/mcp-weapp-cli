@@ -59,7 +59,7 @@
   "mcpServers": {
     "weapp-devtools": {
       "command": "npx",
-      "args": ["-y", "@weapp-devtools/mcp"],
+      "args": ["-y", "@birchcraft/mcp-weapp-cli"],
       "env": {
         "WEAPP_PORT": "9420",
         "WEAPP_LANG": "zh"
@@ -72,7 +72,7 @@
 ### 全局安装
 
 ```bash
-npm install -g @weapp-devtools/mcp
+npm install -g @birchcraft/mcp-weapp-cli
 ```
 
 ### 从源码安装
@@ -80,7 +80,7 @@ npm install -g @weapp-devtools/mcp
 ```bash
 # 克隆仓库
 git clone <repository-url>
-cd weapp-devtools-mcp
+cd mcp-weapp-cli
 
 # 安装依赖
 npm install
@@ -115,7 +115,7 @@ npm run build
   "mcpServers": {
     "weapp-devtools": {
       "command": "npx",
-      "args": ["-y", "@weapp-devtools/mcp"],
+      "args": ["-y", "@birchcraft/mcp-weapp-cli"],
       "env": {
         "WEAPP_PORT": "9420",
         "WEAPP_LANG": "zh"
