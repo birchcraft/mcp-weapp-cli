@@ -30,16 +30,16 @@
     "cli",
     "modelcontextprotocol"
   ],
-  "author": "",
+  "author": "birchcraft <you@example.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-username/weapp-devtools-mcp.git"
+    "url": "git+https://github.com/birchcraft/mcp-weapp-cli.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/weapp-devtools-mcp/issues"
+    "url": "https://github.com/birchcraft/mcp-weapp-cli/issues"
   },
-  "homepage": "https://github.com/your-username/weapp-devtools-mcp#readme",
+  "homepage": "https://github.com/birchcraft/mcp-weapp-cli#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.6.0",
     "zod": "^3.22.4"
