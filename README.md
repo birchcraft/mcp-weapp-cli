@@ -22,6 +22,7 @@
 ## 功能特性
 
 - 🔧 **完整 CLI 覆盖**: 支持微信开发者工具 CLI 的全部 20+ 个命令
+- 🌐 **HTTP API 支持**: 支持通过 HTTP API 调用开发者工具功能
 - 🤖 **AI 集成**: 让 AI 助手能够通过自然语言调用小程序开发工具
 - 📦 **类型安全**: 使用 TypeScript 开发，提供完整的类型定义
 - 🔒 **错误处理**: 完善的错误处理和参数验证
@@ -65,11 +66,13 @@
 ### 项目管理
 | 工具名称 | 描述 |
 |---------|------|
-| `weapp_open` | 打开微信开发者工具或指定项目 |
+| `weapp_open_tool` | 启动微信开发者工具（不打开项目），返回 HTTP 端口号 |
+| `weapp_open_project` | 打开指定的小程序项目，返回 HTTP 端口号 |
 | `weapp_open_other` | 以独立窗口模式打开项目 |
 | `weapp_close` | 关闭指定项目或当前项目 |
 | `weapp_quit` | 完全退出微信开发者工具 |
 | `weapp_reset_fileutils` | 重置文件监听，解决文件监听失效问题 |
+| `weapp_http_detect_port` | 检测 HTTP 服务端口号（从 .ide 文件读取） |
 
 ### 构建
 | 工具名称 | 描述 |
@@ -98,6 +101,23 @@
 |---------|------|
 | `weapp_status` | 检测开发者工具运行状态、端口信息、进程情况 |
 | `weapp_kill_all` | 强制关闭所有开发者工具实例 |
+
+### HTTP API 工具
+| 工具名称 | 描述 |
+|---------|------|
+| `weapp_http_login` | HTTP 方式登录 |
+| `weapp_http_check_login` | HTTP 方式检查登录状态 |
+| `weapp_http_preview` | HTTP 方式预览 |
+| `weapp_http_upload` | HTTP 方式上传代码 |
+| `weapp_http_auto_preview` | HTTP 方式自动预览 |
+| `weapp_http_build_npm` | HTTP 方式构建 npm |
+| `weapp_http_clear_cache` | HTTP 方式清除缓存 |
+| `weapp_http_open` | HTTP 方式打开工具/项目 |
+| `weapp_http_close` | HTTP 方式关闭项目 |
+| `weapp_http_quit` | HTTP 方式退出工具 |
+| `weapp_http_reset_fileutils` | HTTP 方式重置文件监听 |
+| `weapp_http_cloud_env_list` | HTTP 方式获取云环境列表 |
+| `weapp_http_cloud_functions_list` | HTTP 方式获取云函数列表 |
 
 ---
 
@@ -153,6 +173,58 @@ npm run build
 # 创建到源码的链接（可选）
 npm link
 ```
+
+---
+
+## ⚠️ 重要约束提醒
+
+### 1. HTTP 端口 vs 自动化端口
+
+**这是最常见的混淆点，请务必注意：**
+
+| 端口类型 | 参数/环境变量 | 用途 |
+|---------|--------------|------|
+| **HTTP 端口** | `--port` / `WEAPP_PORT` | CLI 和 HTTP API 通信端口 |
+| **自动化端口** | `--auto-port` | 自动化测试 WebSocket 端口 |
+
+- **`weapp_open_tool`** 和 **`weapp_open_project`** 中的 `httpPort` 参数指定的是 **HTTP 服务端口**
+- **`weapp_auto`** 中的 `autoPort` 参数指定的是 **自动化 WebSocket 端口**
+- 两者完全不同，不可混淆！
+
+### 2. 实例唯一性保证
+
+`weapp_open_tool` 和 `weapp_open_project` 会自动确保只有一个开发者工具实例运行：
+- 启动前会检测并关闭其他实例
+- 如果关闭失败，会返回错误提示
+
+### 3. 端口不匹配检测
+
+如果启动时指定的 HTTP 端口与实际启动的端口不同，工具会明确提示：
+
+```
+⚠️ 警告: HTTP 端口不匹配
+
+指定的端口: 9420
+实际的端口: 49283 (与指定端口不同！)
+
+建议: 先执行 weapp_quit 关闭工具，然后重新启动。
+```
+
+### 4. 自动化端口延迟
+
+自动化服务启动后可能有延迟，工具会：
+- 等待最多 8 秒检测端口
+- 明确告知实际监听状态是否符合预期
+- 提供排查建议
+
+### 5. CLI vs HTTP 使用建议
+
+| 场景 | 推荐方式 | 原因 |
+|------|----------|------|
+| 启动/关闭工具 | CLI | 更可靠，直接控制进程 |
+| 开启自动化 | CLI | 需要传递 auto-port 等参数 |
+| 预览/上传 | CLI (默认) | 更稳定 |
+| 清除缓存 | HTTP | 支持更精细的缓存类型控制 |
 
 ---
 
@@ -245,21 +317,24 @@ mcp-weapp-cli/
 │   ├── index.ts                  # 主入口，服务器启动
 │   ├── server.ts                 # MCP 服务器核心实现
 │   ├── cli-client.ts             # CLI 客户端，封装微信 CLI 调用
+│   ├── http-client.ts            # HTTP 客户端，封装 HTTP API 调用 (NEW)
 │   ├── config.ts                 # 配置管理（环境变量、自动检测）
 │   ├── types.ts                  # TypeScript 类型定义
-│   ├── client.ts                 # MCP 客户端示例（用于测试）
 │   ├── tools/                    # 工具定义（按功能分类）
 │   │   ├── index.ts              # 工具注册中心，聚合所有工具
-│   │   ├── auth.ts               # 登录认证工具（login, check_login）
-│   │   ├── preview.ts            # 预览上传工具（preview, auto-preview, upload）
-│   │   ├── project.ts            # 项目管理工具（open, close, quit）
-│   │   ├── build.ts              # 构建工具（build-npm, clear-cache）
-│   │   ├── automation.ts         # 自动化测试工具（auto, auto-replay）
-│   │   ├── cloud.ts              # 云开发工具（cloud functions）
-│   │   └── status.ts             # 状态检测工具（status, kill-all）
+│   │   ├── auth.ts               # 登录认证工具
+│   │   ├── preview.ts            # 预览上传工具
+│   │   ├── project.ts            # 项目管理工具（含 open_tool, open_project）
+│   │   ├── build.ts              # 构建工具
+│   │   ├── automation.ts         # 自动化测试工具
+│   │   ├── cloud.ts              # 云开发工具
+│   │   ├── status.ts             # 状态检测工具
+│   │   └── http.ts               # HTTP API 工具 (NEW)
 │   └── utils/                    # 工具函数
-│       ├── helpers.ts            # 辅助函数（路径验证、参数构建等）
-│       └── logger.ts             # 日志模块
+│       ├── helpers.ts            # 辅助函数
+│       ├── logger.ts             # 日志模块
+│       ├── result-formatter.ts   # 结果格式化
+│       └── tool-wrapper.ts       # 工具包装器
 ├── dist/                         # TypeScript 编译输出
 ├── docs/                         # 文档目录
 │   └── meta/                     # 元文档
@@ -288,22 +363,27 @@ mcp-weapp-cli/
 │                   MCP Server                                │
 │  ┌─────────────┐  ┌──────────────┐  ┌─────────────────────┐ │
 │  │   Tools     │  │  Resources   │  │      Prompts        │ │
-│  │  (22 tools) │  │(CLI status,  │  │ (setup guide,       │ │
+│  │  (35 tools) │  │(CLI status,  │  │ (setup guide,       │ │
 │  │             │  │ config)      │  │  deploy checklist)  │ │
 │  └──────┬──────┘  └──────────────┘  └─────────────────────┘ │
 │         │                                                   │
 │  ┌──────▼────────────────────────────────────────────────┐  │
-│  │              CLI Client (@birchcraft/mcp-weapp-cli)   │  │
+│  │              CLI Client + HTTP Client                 │  │
 │  │  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐  │  │
-│  │  │ ConfigMgr   │  │   CLIExec    │  │  PathDetect  │  │  │
-│  │  │(env/args)   │  │(spawn proc)  │  │(auto detect) │  │  │
+│  │  │ ConfigMgr   │  │   CLIExec    │  │  HTTPReq     │  │  │
+│  │  │(env/args)   │  │(spawn proc)  │  │(fetch api)   │  │  │
 │  │  └─────────────┘  └──────────────┘  └──────────────┘  │  │
-│  └───────────────────────┬────────────────────────────────┘  │
-└──────────────────────────┼──────────────────────────────────┘
-                           │ stdio
-┌──────────────────────────▼──────────────────────────────────┐
-│            WeChat DevTools CLI (cli.bat / cli)              │
-└──────────────────────────┬──────────────────────────────────┘
+│  └───────────────────────┬────────────────────┬──────────┘  │
+└──────────────────────────┼────────────────────┼─────────────┘
+                           │                    │
+              ┌────────────┘                    └──────────┐
+              ▼                                            ▼
+┌──────────────────────────┐                ┌────────────────┐
+│ WeChat DevTools CLI      │                │ HTTP Service   │
+│ (cli.bat / cli)          │                │ (port in .ide) │
+└──────────┬───────────────┘                └────────┬───────┘
+           │                                         │
+           └────────────────┬────────────────────────┘
                            │
 ┌──────────────────────────▼──────────────────────────────────┐
 │              WeChat DevTools IDE                            │
@@ -316,6 +396,7 @@ mcp-weapp-cli/
 |------|------|----------|
 | **MCP Server** | 处理 MCP 协议通信，管理 Tools/Resources/Prompts | `server.ts` |
 | **CLI Client** | 封装微信 CLI 调用，管理进程生命周期 | `cli-client.ts` |
+| **HTTP Client** | 封装 HTTP API 调用，端口检测 | `http-client.ts` |
 | **Config Manager** | 管理配置，自动检测 CLI 路径 | `config.ts` |
 | **Tools** | 实现具体工具逻辑，按功能分类 | `tools/*.ts` |
 | **Utils** | 辅助函数，日志、验证等 | `utils/*.ts` |
@@ -326,11 +407,12 @@ mcp-weapp-cli/
 tools/
 ├── auth.ts          # 认证类工具
 ├── preview.ts       # 预览发布类工具
-├── project.ts       # 项目管理类工具
+├── project.ts       # 项目管理类工具（open_tool, open_project）
 ├── build.ts         # 构建类工具
 ├── automation.ts    # 自动化测试类工具
 ├── cloud.ts         # 云开发类工具
-└── status.ts        # 状态检测类工具
+├── status.ts        # 状态检测类工具
+└── http.ts          # HTTP API 工具
 ```
 
 ---
@@ -455,8 +537,11 @@ npm run build
 
 - [x] 完整的 CLI V2 命令支持
 - [x] 统一的错误处理和结果格式化
+- [x] 区分启动工具和启动项目
+- [x] HTTP API 支持
+- [x] HTTP 端口检测
+- [x] 自动化端口监听检测
 - [ ] 添加单元测试覆盖
-- [ ] 优化 CLI 客户端架构
 - [ ] 支持更多自动化测试功能
 - [ ] 完善中文/英文文档
 

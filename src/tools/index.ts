@@ -10,6 +10,7 @@ import { buildTools } from './build.js';
 import { automationTools } from './automation.js';
 import { cloudTools } from './cloud.js';
 import { statusTools } from './status.js';
+import { httpTools } from './http.js';
 
 // 导出所有工具分类
 export { authTools } from './auth.js';
@@ -19,6 +20,7 @@ export { buildTools } from './build.js';
 export { automationTools } from './automation.js';
 export { cloudTools } from './cloud.js';
 export { statusTools } from './status.js';
+export { httpTools } from './http.js';
 
 // 导出所有工具定义数组
 export const allTools: ToolDefinition[] = [
@@ -29,6 +31,7 @@ export const allTools: ToolDefinition[] = [
   ...automationTools,
   ...cloudTools,
   ...statusTools,
+  ...httpTools,
 ];
 
 // 工具数量统计
@@ -41,6 +44,7 @@ export const toolStats = {
   automation: automationTools.length,
   cloud: cloudTools.length,
   status: statusTools.length,
+  http: httpTools.length,
 };
 
 // 导出工具名称列表

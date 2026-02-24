@@ -155,6 +155,51 @@ export enum CLICommand {
   ENGINE_BUILD = 'engine build',
 }
 
+// ==================== HTTP API 类型定义 ====================
+
+// HTTP 执行结果
+export interface HTTPResult {
+  success: boolean;
+  statusCode: number;
+  data: any;
+  error?: string;
+}
+
+// HTTP API 路径枚举
+export enum HTTPPath {
+  LOGIN = '/v2/login',
+  IS_LOGIN = '/v2/islogin',
+  PREVIEW = '/v2/preview',
+  UPLOAD = '/v2/upload',
+  AUTO_PREVIEW = '/v2/autopreview',
+  BUILD_NPM = '/v2/buildnpm',
+  CLEAN_CACHE = '/v2/cleancache',
+  OPEN = '/v2/open',
+  CLOSE = '/v2/close',
+  QUIT = '/v2/quit',
+  RESET_FILEUTILS = '/v2/resetfileutils',
+  CLOUD_ENV_LIST = '/v2/cloud/env/list',
+  CLOUD_FUNCTIONS_LIST = '/v2/cloud/functions/list',
+  CLOUD_FUNCTIONS_INFO = '/v2/cloud/functions/info',
+  CLOUD_FUNCTIONS_DEPLOY = '/v2/cloud/functions/deploy',
+  CLOUD_FUNCTIONS_INC_DEPLOY = '/v2/cloud/functions/inc-deploy',
+  CLOUD_FUNCTIONS_DOWNLOAD = '/v2/cloud/functions/download',
+}
+
+// HTTP 服务配置
+export interface HTTPServiceConfig {
+  port: number;
+  baseURL: string;
+}
+
+// HTTP 端口检测结果
+export interface HTTPPortDetectionResult {
+  found: boolean;
+  port?: number;
+  ideFilePath?: string;
+  error?: string;
+}
+
 // 缓存类型
 export type CacheType = 'storage' | 'file' | 'compile' | 'auth' | 'network' | 'session' | 'all';
 

@@ -266,6 +266,105 @@ const myTool = createTool<{ project: string }>('weapp_xxx', '描述')
 
 ---
 
+### 2026-02-24 功能增强日 - CLI 改造与 HTTP 支持
+
+**【14:52】计划**: 改造 CLI 工具并添加 HTTP 调用支持
+
+**【16:30】完成**: 所有任务已完成，编译通过
+
+#### 已完成
+- [x] 改造 CLI 客户端：分离启动工具/项目方法
+- [x] 实现 HTTP 服务端口检测（从 .ide 文件读取）
+- [x] 增强自动化工具：检测实际监听端口是否符合预期
+- [x] 新建 HTTP 客户端模块和工具（覆盖 HTTP API 全部功能）
+- [x] 更新设计方案文档
+- [x] 更新 README 和 AGENT_WORKFLOW 约束提醒
+- [x] 编译检查通过
+
+#### 涉及文件
+- `docs/design/设计方案.md` - 更新设计（新增 HTTP 功能设计、约束提醒）
+- `src/cli-client.ts` - 分离 openTool/openProject 方法，增强返回值（返回 HTTP 端口）
+- `src/http-client.ts` (新建) - HTTP 客户端（支持从 .ide 文件检测端口）
+- `src/tools/http.ts` (新建) - HTTP 工具（13 个 HTTP API 工具）
+- `src/tools/project.ts` - 更新项目管理工具（weapp_open_tool, weapp_open_project, weapp_http_detect_port）
+- `src/tools/automation.ts` - 增强端口检测（等待并检测实际监听状态）
+- `src/tools/index.ts` - 更新工具注册，添加 HTTP 工具
+- `src/types.ts` - 添加 HTTP 相关类型
+- `README.md` - 更新文档（新增工具列表、重要约束提醒）
+- `docs/meta/AGENT_WORKFLOW.md` - 更新约束提醒（端口区分、实例唯一性等）
+
+#### 新增工具列表
+
+**项目管理工具改造**:
+- `weapp_open_tool` - 启动开发者工具，返回 HTTP 端口，确保单一实例
+- `weapp_open_project` - 打开指定项目，返回 HTTP 端口，确保单一实例
+- `weapp_http_detect_port` - 从 .ide 文件检测 HTTP 服务端口
+
+**HTTP API 工具** (13个):
+- `weapp_http_login`, `weapp_http_check_login`
+- `weapp_http_preview`, `weapp_http_upload`, `weapp_http_auto_preview`
+- `weapp_http_build_npm`, `weapp_http_clear_cache`
+- `weapp_http_open`, `weapp_http_close`, `weapp_http_quit`
+- `weapp_http_reset_fileutils`
+- `weapp_http_cloud_env_list`, `weapp_http_cloud_functions_list`
+
+#### 关键改进
+
+1. **端口区分清晰化**:
+   - HTTP 端口（--port）：用于 CLI/HTTP 通信
+   - 自动化端口（--auto-port）：用于自动化测试 WebSocket
+   - 文档和工具描述中明确区分
+
+2. **实例唯一性保证**:
+   - 启动前自动检测并关闭其他实例
+   - 多次重试机制（最多 3 次）
+
+3. **端口返回值**:
+   - openTool/openProject 返回实际 HTTP 端口号
+   - 如果与指定端口不同，明确警告用户
+
+4. **自动化端口检测增强**:
+   - 等待最多 8 秒检测端口监听状态
+   - 明确告知是否符合预期
+   - 提供排查建议
+
+5. **HTTP 端口自动检测**:
+   - 从 .ide 文件读取 HTTP 端口
+   - 支持 MD5 路径计算
+
+#### Git 提交记录
+```
+（待提交）
+```
+
+#### CI 工具评估结论
+经过评估，暂不集成 `miniprogram-ci`，原因：
+1. `miniprogram-ci` 是独立 npm 包，不依赖开发者工具
+2. 需要私钥和 IP 白名单配置，使用方式完全不同
+3. 本项目定位是 MCP 服务器封装开发者工具 CLI/HTTP
+4. 如需 CI 功能，用户可直接使用 `miniprogram-ci` 包
+
+#### 遗留问题更新
+| 问题 | 状态 | 说明 |
+|------|------|------|
+| CLI 客户端过厚 | 已优化 | 部分逻辑已分离到 HTTP 客户端 |
+| 无测试覆盖 | 待解决 | tests/ 目录仍为空，需要后续补充 |
+
+#### 工具总数统计
+| 分类 | 数量 |
+|------|------|
+| 登录认证 | 2 |
+| 预览上传 | 3 |
+| 项目管理 | 7 |
+| 构建 | 2 |
+| 自动化 | 2 |
+| 云开发 | 6 |
+| 状态检测 | 2 |
+| HTTP API | 13 |
+| **总计** | **37** |
+
+---
+
 ### [模板] - 任务完成记录
 
 **完成时间**: YYYY-MM-DD HH:mm  
