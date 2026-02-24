@@ -64,11 +64,8 @@ try {
 
 | 问题 | 影响 | 优先级 |
 |------|------|--------|
-| 代码重复严重 | 每个工具都有相似的 error handling 和格式化逻辑 | 高 |
-| 返回格式不统一 | 有些返回 JSON，有些返回纯文本 | 高 |
 | CLI 客户端过厚 | 500+ 行，每个命令独立方法但逻辑相似 | 中 |
 | 无测试覆盖 | tests/ 目录为空 | 中 |
-| 参数验证分散 | 每个工具自己验证，无统一框架 | 低 |
 
 ### 关键文件速查
 
@@ -211,6 +208,61 @@ try {
 | P1 | **统一参数验证** | 使用 zod 进行参数验证 |
 | P2 | **添加测试** | 为核心模块添加单元测试 |
 | P2 | **代码结构优化** | 重新组织目录结构 |
+
+---
+
+### 2026-02-24 重构日 - 统一工具执行框架
+
+**【14:35】计划**: 重构项目，修复遗留的代码重复和格式不统一问题
+
+**【14:50】完成**: 重构完成，所有遗留问题解决
+
+#### 已完成
+- [x] 创建统一结果处理器 `ResultFormatter` 类
+- [x] 创建工具执行包装器，统一错误处理逻辑
+- [x] 重构 auth.ts - 使用新框架
+- [x] 重构 preview.ts - 使用新框架
+- [x] 重构 project.ts - 使用新框架
+- [x] 重构 build.ts - 使用新框架
+- [x] 重构 automation.ts - 使用新框架
+- [x] 重构 cloud.ts - 使用新框架
+- [x] 重构 status.ts - 使用新框架
+- [x] 编译检查并通过
+
+#### 涉及文件
+- `src/utils/result-formatter.ts` (新建) - 统一结果格式化
+- `src/utils/tool-wrapper.ts` (新建) - 工具包装器和构建器
+- `src/tools/auth.ts` - 使用 ToolBuilder 重构
+- `src/tools/preview.ts` - 使用 wrapHandler 重构
+- `src/tools/project.ts` - 使用 wrapHandler 重构
+- `src/tools/build.ts` - 使用 wrapHandler 重构
+- `src/tools/automation.ts` - 简化错误处理
+- `src/tools/cloud.ts` - 使用 ToolBuilder 重构
+- `src/tools/status.ts` - 简化错误处理
+
+#### 重构成果
+1. **消除代码重复**: 所有工具使用统一的错误处理和结果格式化
+2. **统一返回格式**: 成功用 `✓`，错误用 `✗`，格式一致
+3. **简化工具实现**: 工具只需关注业务逻辑
+4. **新增工具构建器**: `createTool()` 提供链式 API 定义工具
+
+#### 新增 API
+```typescript
+// 结果格式化
+import { success, error, fromCLI, json, text } from '../utils/result-formatter.js';
+
+// 工具包装器
+import { createTool, createToolHandler, createSimpleToolHandler } from '../utils/tool-wrapper.js';
+
+// 示例：使用 ToolBuilder 创建工具
+const myTool = createTool<{ project: string }>('weapp_xxx', '描述')
+  .stringParam('project', '项目路径', { required: true })
+  .wrapHandler({
+    operation: '操作名称',
+    executor: async (args) => cliClient.xxx(args.project),
+  })
+  .build();
+```
 
 ---
 
